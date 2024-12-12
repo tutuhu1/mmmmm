@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简单网页示例</title>
+    <style>
+        /* Global CSS variables */
+        :root {
+            --light-color: #fff;
+            --background-brightness: 1;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('image/malacca.jpg'); /* Replace with your image path */
+            background-size: cover;
+            background-position: center;
+            color: rgb(230, 225, 211);
+            position: relative;
+            padding-top: 20px;
+            filter: brightness(var(--background-brightness));
+            transition: filter 0.3s;
+        }
+
+        h1 {
+            font-size: 3em;
+            margin: 20px 0;
+            z-index: 2;
+        }
+
+        p {
+            font-size: 1.5em;
+            margin: 10px 0;
+            z-index: 2;
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 15px 30px;
+            background-color: #4682b4;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 1.2em;
+            position: relative;
+            z-index: 2;
+        }
+
+        .box {
+            width: 960px;
+            margin-top: 40px; /* Adjusted for downward translation */
+            position: relative;
+            z-index: 1;
+            transform: translateY(50px); /* Move the photo wall down */
+        }
+
+        .box img {
+            border: 1px solid rgba(0, 0, 0, 0.5); /* Semi-transparent black border */
+            padding: 10px;
+            position: absolute;
+            background: #412e2e;
+            z-index: 1;
+            transition-duration: .6s;
+            transition-timing-function: ease-in-out;
+        }
+
+        img:nth-child(odd) {
+            width: 300px;
+        }
+
+        img:nth-child(even) {
+            width: 200px;
+        }
+
+        .box img:nth-child(1) { top: 180px; left: 280px; transform: rotate(-15deg); }
+        .box img:nth-child(2) { top: 130px; left: 480px; transform: rotate(-20deg); }
+        .box img:nth-child(3) { top: 30px; left: 680px; transform: rotate(15deg); }
+        .box img:nth-child(4) { top: 40px; left: 280px; transform: rotate(-15deg); }
+        .box img:nth-child(5) { top: 30px; left: -40px; transform: rotate(-30deg); }
+        .box img:nth-child(6) { top: 280px; left: -20px; transform: rotate(20deg); }
+        .box img:nth-child(7) { top: 230px; left: 740px; transform: rotate(20deg); }
+        .box img:nth-child(8) { top: -60px; left: 480px; transform: rotate(30deg); }
+        .box img:nth-child(9) { top: 300px; left: 530px; transform: rotate(15deg); }
+        .box img:nth-child(10) { top: 300px; left: 180px; transform: rotate(-10deg); }
+
+        .box img:hover {
+            z-index: 2;
+            box-shadow: 5px 5px 5px #DDDDDD;
+            transform: rotate(0deg) scale(1.5);
+        }
+
+        /* New Light bulb styles */
+        .light-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .wire {
+            width: 2px;
+            height: 50px;
+            background-color: #8f8e8e;
+        }
+
+        .light {
+            position: relative;
+            width: 60px;
+            height: 100px;
+            background-color: var(--light-color);
+            border-radius: 50% 50% 40% 40%;
+            box-shadow: 0 0 20px var(--light-color), 0 0 40px var(--light-color), 0 0 60px var(--light-color);
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        .light::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 20px;
+            background-color: #000;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>欢迎光临！</h1>
+    <p>这是一个纪念照片墙。</p>
+    <a href="game.html">返回</a>
+    <div class="box">
+        <img src="image/1.jpg" />
+        <img src="image/2.jpg" />
+        <img src="image/3.jpg" />
+        <img src="image/4.jpg" />
+        <img src="image/5.jpg" />
+        <img src="image/6.jpg" />
+        <img src="image/7.jpg" />
+        <img src="image/8.jpg" />
+        <img src="image/9.jpg" />
+        <img src="image/10.jpg" />
+    </div>
+
+    <!-- New Light bulb effect -->
+    <div class="light-container" onclick="toggleLight()">
+        <div class="wire"></div>
+        <div class="light"></div>
+    </div>
+
+    <script>
+        let lightOn = true;
+        const light = document.querySelector('.light');
+
+        function toggleLight() {
+            lightOn = !lightOn;
+            if (lightOn) {
+                document.documentElement.style.setProperty('--light-color', '#fff');
+                document.documentElement.style.setProperty('--background-brightness', '1');
+            } else {
+                document.documentElement.style.setProperty('--light-color', '#333');
+                document.documentElement.style.setProperty('--background-brightness', '0.5');
+            }
+        }
+    </script>
+</body>
+</html>

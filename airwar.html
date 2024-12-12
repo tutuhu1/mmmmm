@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>飞机大战</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #000;
+            margin: 0;
+            overflow: hidden;
+            color: white;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #score {
+            font-size: 20px;
+            color: white;
+            margin-top: 10px;
+        }
+
+        .mode-selection {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 300px;
+            height: 200px;
+            background-color: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .mode-selection button {
+            display: block;
+            width: 100%;
+            margin-bottom: 20px;
+            padding: 15px;
+            font-size: 18px;
+            background-color: #444;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .mode-selection button:hover {
+            background-color: #666;
+        }
+
+        #backButton {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #444;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #backButton:hover {
+            background-color: #666;
+        }
+    </style>
+</head>
+<body>
+    <button id="backButton">返回</button>
+    <canvas id="gameCanvas"></canvas>
+    <div id="score">得分: 0</div>
+
+    <div id="modeSelection" class="mode-selection" style="display: none;">
+        <p style="font-size: 24px; color: white;">选择游戏模式</p>
+        <button id="easyMode">简单模式</button>
+        <button id="hardMode">困难模式</button>
+    </div>
+
+    <script>
+        document.getElementById('backButton').addEventListener('click', () => {
+            window.location.href = 'game.html'; // Replace with your local page path
+        });
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const playerImg = new Image();
+        playerImg.src = 'fonts/mj.png'; // Changed to local path
+        const enemyImg = new Image();
+        enemyImg.src = 'fonts/dj.png'; // Changed to local path
+        const backgroundImg = new Image();
+        backgroundImg.src = 'fonts/SK2.jpeg'; // Background image path
+
+        let playerReady = false;
+        playerImg.onload = () => {
+            playerReady = true;
+            drawModeSelection(); // 在背景加载完后显示模式选择框
+        };
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight - 100; // Adjusted to leave space for score
+
+        const CENTER_COLUMN_WIDTH = 500;
+        const COLUMN_COUNT = 5;
+        const COLUMN_WIDTH = CENTER_COLUMN_WIDTH / COLUMN_COUNT;
+
+        const centerStartX = (canvas.width - CENTER_COLUMN_WIDTH) / 2;
+
+        const PLAYER_WIDTH = 100;
+        const PLAYER_HEIGHT = 100;
+        const ENEMY_WIDTH = 50;
+        const ENEMY_HEIGHT = 50;
+        const BULLET_WIDTH = 5;
+        const BULLET_HEIGHT = 10;
+
+        let score = 0;
+        let gameOver = false;
+        let lastBulletTime = 0;
+        const BULLET_INTERVAL = 200;
+
+        let enemySpawnRate = 0.0025;
+        const enemySpawnRateIncrement = 0.00012;
+        let maxSpawnRate = 0.03;
+        let enemySpeed = 0.7;
+
+        const player = {
+            x: canvas.width / 2 - PLAYER_WIDTH / 2,
+            y: canvas.height - PLAYER_HEIGHT - 10,
+            width: PLAYER_WIDTH,
+            height: PLAYER_HEIGHT,
+            speed: 5,
+            bullets: [],
+            touchStartX: 0, // 用于存储触摸的起始位置
+            touchEndX: 0, // 用于存储触摸的结束位置
+        };
+
+        const enemies = [];
+
+        const keys = {
+            left: false,
+            right: false,
+        };
+
+        function drawBackground() {
+            ctx.fillStyle = '#000'; // 黑色背景填充
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.drawImage(
+                backgroundImg,
+                centerStartX,
+                0,
+                CENTER_COLUMN_WIDTH,
+                canvas.height
+            );
+        }
+
+        function drawPlayer() {
+            ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
+        }
+
+        function drawBullets() {
+            ctx.fillStyle = 'yellow';
+            player.bullets.forEach((bullet, index) => {
+                bullet.y -= 10;
+                ctx.fillRect(bullet.x, bullet.y, BULLET_WIDTH, BULLET_HEIGHT);
+
+                if (bullet.y < 0) {
+                    player.bullets.splice(index, 1);
+                }
+            });
+        }
+
+        function drawEnemies() {
+            enemies.forEach((enemy, enemyIndex) => {
+                enemy.y += enemySpeed;
+                ctx.drawImage(enemyImg, enemy.x, enemy.y, enemy.width, enemy.height);
+
+                if (enemy.y > canvas.height) {
+                    gameOver = true;
+                }
+
+                player.bullets.forEach((bullet, bulletIndex) => {
+                    if (
+                        bullet.x < enemy.x + enemy.width &&
+                        bullet.x + BULLET_WIDTH > enemy.x &&
+                        bullet.y < enemy.y + enemy.height &&
+                        bullet.y + BULLET_HEIGHT > enemy.y
+                    ) {
+                        player.bullets.splice(bulletIndex, 1);
+                        enemies.splice(enemyIndex, 1);
+
+                        score += 100;
+                        document.getElementById('score').textContent = `得分: ${score}`;
+                    }
+                });
+            });
+        }
+
+        function spawnEnemies() {
+            if (Math.random() < enemySpawnRate) {
+                const column = Math.floor(Math.random() * COLUMN_COUNT);
+                const x = centerStartX + column * COLUMN_WIDTH + (COLUMN_WIDTH - ENEMY_WIDTH) / 2;
+                enemies.push({ x: x, y: 0, width: ENEMY_WIDTH, height: ENEMY_HEIGHT });
+            }
+        }
+
+        function drawModeSelection() {
+            const modeSelectionDiv = document.getElementById('modeSelection');
+            modeSelectionDiv.style.display = 'block';
+
+            const easyModeButton = document.getElementById('easyMode');
+            const hardModeButton = document.getElementById('hardMode');
+
+            easyModeButton.addEventListener('click', () => {
+                startGame('easy');
+            });
+
+            hardModeButton.addEventListener('click', () => {
+                startGame('hard');
+            });
+        }
+
+        function startGame(mode) {
+            document.getElementById('modeSelection').style.display = 'none';
+
+            if (mode === 'easy') {
+                maxSpawnRate = 0.03;
+                enemySpeed = 0.7;
+                enemySpawnRate = 0.0025;
+            } else if (mode === 'hard') {
+                maxSpawnRate = 0.035;
+                enemySpeed = 0.8;
+                enemySpawnRate = 0.0015;
+            }
+
+            gameLoop();
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBackground();
+
+            if (gameOver) {
+                drawGameOverScreen();
+                return;
+            }
+
+            movePlayer();
+            fireBullet();
+            spawnEnemies();
+            drawPlayer();
+            drawBullets();
+            drawEnemies();
+
+            enemySpawnRate = Math.min(enemySpawnRate + enemySpawnRateIncrement, maxSpawnRate);
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function drawGameOverScreen() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = 'white';
+            ctx.font = '48px Arial';
+            ctx.fillText('游戏结束', canvas.width / 2 - 120, canvas.height / 2);
+            ctx.font = '24px Arial';
+            ctx.fillText(`最终得分: ${score}`, canvas.width / 2 - 80, canvas.height / 2 + 40);
+        }
+
+        function movePlayer() {
+            if (keys.left) {
+                player.x -= player.speed;
+            }
+            if (keys.right) {
+                player.x += player.speed;
+            }
+
+            if (player.x < centerStartX) {
+                player.x = centerStartX;
+            }
+            if (player.x + player.width > centerStartX + CENTER_COLUMN_WIDTH) {
+                player.x = centerStartX + CENTER_COLUMN_WIDTH - player.width;
+            }
+
+            // 手机端拖动控制
+            if (player.touchStartX !== 0) {
+                const touchMoveX = player.touchEndX - player.touchStartX;
+                player.x = Math.max(centerStartX, Math.min(player.x + touchMoveX, centerStartX + CENTER_COLUMN_WIDTH - player.width));
+                player.touchStartX = 0; // Reset touch position
+            }
+        }
+
+        function fireBullet() {
+            const currentTime = Date.now();
+            if (currentTime - lastBulletTime > BULLET_INTERVAL) {
+                player.bullets.push({
+                    x: player.x + player.width / 2 - BULLET_WIDTH / 2,
+                    y: player.y,
+                });
+                lastBulletTime = currentTime;
+            }
+        }
+
+        // 监听键盘事件
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowLeft' || event.key === 'a') {
+                keys.left = true;
+            }
+            if (event.key === 'ArrowRight' || event.key === 'd') {
+                keys.right = true;
+            }
+        });
+
+        document.addEventListener('keyup', (event) => {
+            if (event.key === 'ArrowLeft' || event.key === 'a') {
+                keys.left = false;
+            }
+            if (event.key === 'ArrowRight' || event.key === 'd') {
+                keys.right = false;
+            }
+        });
+
+        // 手机端拖动事件
+        canvas.addEventListener('touchstart', (event) => {
+            player.touchStartX = event.touches[0].clientX;
+        });
+
+        canvas.addEventListener('touchmove', (event) => {
+            player.touchEndX = event.touches[0].clientX;
+        });
+
+        playerImg.onload = () => {
+            playerReady = true;
+            drawModeSelection(); // 显示模式选择
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小游戏合集</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            margin: 0;
+            overflow: hidden;
+            position: relative;
+            height: 100vh;
+            background: linear-gradient(135deg, #f0e6f6, #fff5cc);
+            padding-top: 80px; /* Adjust for fixed nav */
+        }
+        nav {
+            background-color: rgba(70, 130, 180, 0.8);
+            padding: 15px;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        nav ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+        }
+        nav ul li {
+            margin: 0 20px;
+        }
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: bold;
+            transition: color 0.3s, transform 0.3s;
+        }
+        nav ul li a:hover {
+            color: #ffeb3b;
+            transform: scale(1.1);
+        }
+        .content {
+            margin-top: 80px;
+        }
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 120px);
+            grid-gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .hole {
+            width: 120px;
+            height: 120px;
+            background-color: #654321;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+            border: 5px solid #3e2723;
+        }
+        .mole {
+            width: 80px;
+            height: 80px;
+            background-image: url('fonts/mole.png'); /* 使用本地图片 */
+            background-size: cover;
+            border-radius: 50%;
+            position: absolute;
+            bottom: -80px;
+            left: 20px;
+            transition: bottom 0.3s;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+        }
+        .mole.up {
+            bottom: 10px;
+        }
+        input {
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: border-color 0.3s;
+        }
+        input:focus {
+            border-color: #4682b4;
+            outline: none;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4682b4;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s, transform 0.3s;
+        }
+        button:hover {
+            background-color: #5a9bd4;
+            transform: translateY(-2px);
+        }
+        footer {
+            margin-top: 50px;
+            font-size: 14px;
+            color: #888;
+        }
+        .bubble {
+            position: absolute;
+            bottom: 0;
+            cursor: pointer;
+            animation: rise 15s infinite linear;
+            background: radial-gradient(circle, rgba(173, 216, 230, 0.1) 0%, rgba(173, 216, 230, 0.7) 80%, rgba(173, 216, 230, 1) 100%);
+            border-radius: 50%;
+            opacity: 0.8;
+        }
+        @keyframes rise {
+            0% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-100vh);
+            }
+            100% {
+                transform: translateY(0);
+            }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        .shake {
+            animation: shake 0.3s;
+        }
+        .audio-controls {
+            position: fixed;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            width: 80%;
+        }
+        .audio-controls button {
+            margin: 0 5px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 24px;
+        }
+        .audio-controls button.play {
+            color: green;
+        }
+        .audio-controls button.pause {
+            color: red;
+        }
+        .audio-controls input[type="range"] {
+            flex-grow: 1;
+            margin: 0 10px;
+        }
+        .container {
+            width: 468px;
+            margin: 30px auto;
+        }
+        .info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .grid {
+            display: flex;
+            flex-wrap: wrap;
+            width: 456px;
+            height: 456px;
+            background-color: #BBADA0;
+            border: 7px solid #BBADA0;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+        .grid div {
+            width: 100px;
+            height: 100px;
+            margin: 7px;
+            border-radius: 3px;
+            background-color: #EEE4DA;
+            color: #AFA192;
+            font-weight: bold;
+            text-align: center;
+            font-size: 60px;
+            line-height: 1.6;
+        }
+        #back-button, #restart2048 {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #8f7a66;
+            color: #FFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #back-button:hover, #restart2048:hover {
+            background-color: #7a6a5a;
+        }
+        #timer2048 {
+            font-size: 18px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="#" onclick="showGame('guessNumber')">猜数字</a></li>
+            <li><a href="#" onclick="showGame('whackAMole')">打地鼠</a></li>
+            <li><a href="#" onclick="showGame('2048')">2048</a></li>
+            <li><a href="airwar.html">飞机大战</a></li>
+            <li><a href="startup.html">更多</a></li>
+        </ul>
+    </nav>
+    <div class="content" id="gameContent">
+        <h1>欢迎来到小游戏合集</h1>
+        <p>请选择一个游戏开始玩！</p>
+    </div>
+
+    <audio id="bgm" src="audio/bgm.mp3" loop></audio>
+    <div class="audio-controls">
+        <button id="playPauseBtn" class="play">▶️</button>
+        <input type="range" id="progressBar" value="0" max="100">
+    </div>
+
+    <script>
+        const audio = document.getElementById('bgm');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const progressBar = document.getElementById('progressBar');
+
+        audio.play();
+
+        playPauseBtn.addEventListener('click', () => {
+            if (audio.paused) {
+                audio.play();
+                playPauseBtn.textContent = '⏸️';
+                playPauseBtn.classList.remove('play');
+                playPauseBtn.classList.add('pause');
+            } else {
+                audio.pause();
+                playPauseBtn.textContent = '▶️';
+                playPauseBtn.classList.remove('pause');
+                playPauseBtn.classList.add('play');
+            }
+        });
+
+        audio.addEventListener('timeupdate', () => {
+            const progress = (audio.currentTime / audio.duration) * 100;
+            progressBar.value = progress;
+        });
+
+        progressBar.addEventListener('input', () => {
+            const newTime = (progressBar.value / 100) * audio.duration;
+            audio.currentTime = newTime;
+        });
+
+        function showGame(game) {
+            const gameContent = document.getElementById('gameContent');
+            if (game === 'guessNumber') {
+                gameContent.innerHTML = `
+                    <h1>猜数字游戏</h1>
+                    <p>我想了一个1到100之间的数字，你能猜到吗？</p>
+                    <input type="number" id="guessInput" placeholder="输入你的猜测">
+                    <button onclick="checkGuess()">提交</button>
+                    <button id="restartButton" onclick="restartGame()" style="display: none;">再玩一次</button>
+                    <button onclick="resetGame()">重新开始</button>
+                    <p id="result"></p>
+                    <p id="range">当前范围：1 - 100</p>
+                    <p id="attempts">已使用的猜测次数：0</p>
+                `;
+                restartGame();
+            } else if (game === 'whackAMole') {
+                gameContent.innerHTML = `
+                    <h1>打地鼠游戏</h1>
+                    <div class="game-grid">
+                        <div class="hole" onclick="whack(this)"><div class="mole"></div></div>
+                        <div class="hole" onclick="whack(this)"><div class="mole"></div></div>
+                        <div class="hole" onclick="whack(this)"><div class="mole"></div></div>
+                        <div class="hole" onclick="whack(this)"><div class="mole"></div></div>
+                        <div class="hole" onclick="whack(this)"><div class="mole"></div></div>
+                        <div class="hole" onclick="whack(this)"><div class="mole"></div></div>
+                        <div class="hole" onclick="whack(this)"><div class="mole"></div></div>
+                        <div class="hole" onclick="whack(this)"><div class="mole"></div></div>
+                        <div class="hole" onclick="whack(this)"><div class="mole"></div></div>
+                    </div>
+                    <button onclick="startWhackAMole()">开始游戏</button>
+                    <button id="restartWhackButton" onclick="startWhackAMole()" style="display: none;">再玩一次</button>
+                    <p id="score">得分: 0</p>
+                    <p id="timer">时间: 10秒</p>
+                `;
+            } else if (game === '2048') {
+                gameContent.innerHTML = `
+                    <h1>2048</h1>
+                    <div class="container">
+                        <div class="grid"></div>
+                        <button id="restart2048">重新开始</button>
+                        <p id="timer2048">时间: 0秒</p>
+                    </div>
+                `;
+                init2048();
+            } else {
+                gameContent.innerHTML = `<h1>待开发</h1><p>此游戏尚未开发，敬请期待！</p>`;
+            }
+        }
+
+        function init2048() {
+            const gridDisplay = document.querySelector(".grid");
+            const resultDisplay = document.querySelector("#result");
+            const timerDisplay = document.querySelector("#timer2048");
+            const restartButton = document.querySelector("#restart2048");
+            const width = 4;
+            let squares = [];
+            let timerInterval;
+            let seconds = 0;
+
+            function createBoard() {
+                for (let i = 0; i < width * width; i++) {
+                    const square = document.createElement("div");
+                    square.innerHTML = 0;
+                    gridDisplay.appendChild(square);
+                    squares.push(square);
+                }
+                generate();
+                generate();
+            }
+
+            function generate() {
+                const randomNumber = Math.floor(Math.random() * squares.length);
+                if (squares[randomNumber].innerHTML == 0) {
+                    squares[randomNumber].innerHTML = 2;
+                    checkForGameOver();
+                } else generate();
+            }
+
+            function moveRight() {
+                for (let i = 0; i < 16; i++) {
+                    if (i % 4 === 0) {
+                        let totalOne = squares[i].innerHTML;
+                        let totalTwo = squares[i + 1].innerHTML;
+                        let totalThree = squares[i + 2].innerHTML;
+                        let totalFour = squares[i + 3].innerHTML;
+                        let row = [parseInt(totalOne), parseInt(totalTwo), parseInt(totalThree), parseInt(totalFour)];
+
+                        let filteredRow = row.filter(num => num);
+                        let missing = 4 - filteredRow.length;
+                        let zeros = Array(missing).fill(0);
+                        let newRow = zeros.concat(filteredRow);
+
+                        squares[i].innerHTML = newRow[0];
+                        squares[i + 1].innerHTML = newRow[1];
+                        squares[i + 2].innerHTML = newRow[2];
+                        squares[i + 3].innerHTML = newRow[3];
+                    }
+                }
+            }
+
+            function moveLeft() {
+                for (let i = 0; i < 16; i++) {
+                    if (i % 4 === 0) {
+                        let totalOne = squares[i].innerHTML;
+                        let totalTwo = squares[i + 1].innerHTML;
+                        let totalThree = squares[i + 2].innerHTML;
+                        let totalFour = squares[i + 3].innerHTML;
+                        let row = [parseInt(totalOne), parseInt(totalTwo), parseInt(totalThree), parseInt(totalFour)];
+
+                        let filteredRow = row.filter(num => num);
+                        let missing = 4 - filteredRow.length;
+                        let zeros = Array(missing).fill(0);
+                        let newRow = filteredRow.concat(zeros);
+
+                        squares[i].innerHTML = newRow[0];
+                        squares[i + 1].innerHTML = newRow[1];
+                        squares[i + 2].innerHTML = newRow[2];
+                        squares[i + 3].innerHTML = newRow[3];
+                    }
+                }
+            }
+
+            function moveUp() {
+                for (let i = 0; i < 4; i++) {
+                    let totalOne = squares[i].innerHTML;
+                    let totalTwo = squares[i + width].innerHTML;
+                    let totalThree = squares[i + width * 2].innerHTML;
+                    let totalFour = squares[i + width * 3].innerHTML;
+                    let column = [parseInt(totalOne), parseInt(totalTwo), parseInt(totalThree), parseInt(totalFour)];
+
+                    let filteredColumn = column.filter(num => num);
+                    let missing = 4 - filteredColumn.length;
+                    let zeros = Array(missing).fill(0);
+                    let newColumn = filteredColumn.concat(zeros);
+
+                    squares[i].innerHTML = newColumn[0];
+                    squares[i + width].innerHTML = newColumn[1];
+                    squares[i + width * 2].innerHTML = newColumn[2];
+                    squares[i + width * 3].innerHTML = newColumn[3];
+                }
+            }
+
+            function moveDown() {
+                for (let i = 0; i < 4; i++) {
+                    let totalOne = squares[i].innerHTML;
+                    let totalTwo = squares[i + width].innerHTML;
+                    let totalThree = squares[i + width * 2].innerHTML;
+                    let totalFour = squares[i + width * 3].innerHTML;
+                    let column = [parseInt(totalOne), parseInt(totalTwo), parseInt(totalThree), parseInt(totalFour)];
+
+                    let filteredColumn = column.filter(num => num);
+                    let missing = 4 - filteredColumn.length;
+                    let zeros = Array(missing).fill(0);
+                    let newColumn = zeros.concat(filteredColumn);
+
+                    squares[i].innerHTML = newColumn[0];
+                    squares[i + width].innerHTML = newColumn[1];
+                    squares[i + width * 2].innerHTML = newColumn[2];
+                    squares[i + width * 3].innerHTML = newColumn[3];
+                }
+            }
+
+            function combineRow() {
+                for (let i = 0; i < 15; i++) {
+                    if (squares[i].innerHTML === squares[i + 1].innerHTML) {
+                        let combinedTotal = parseInt(squares[i].innerHTML) + parseInt(squares[i + 1].innerHTML);
+                        squares[i].innerHTML = combinedTotal;
+                        squares[i + 1].innerHTML = 0;
+                    }
+                }
+                checkForWin();
+            }
+
+            function combineColumn() {
+                for (let i = 0; i < 12; i++) {
+                    if (squares[i].innerHTML === squares[i + width].innerHTML) {
+                        let combinedTotal = parseInt(squares[i].innerHTML) + parseInt(squares[i + width].innerHTML);
+                        squares[i].innerHTML = combinedTotal;
+                        squares[i + width].innerHTML = 0;
+                    }
+                }
+                checkForWin();
+            }
+
+            function control(e) {
+                if (e.key === "ArrowLeft") {
+                    keyLeft();
+                } else if (e.key === "ArrowRight") {
+                    keyRight();
+                } else if (e.key === "ArrowUp") {
+                    keyUp();
+                } else if (e.key === "ArrowDown") {
+                    keyDown();
+                }
+            }
+            document.addEventListener("keydown", control);
+
+            function keyLeft() {
+                moveLeft();
+                combineRow();
+                moveLeft();
+                generate();
+            }
+
+            function keyRight() {
+                moveRight();
+                combineRow();
+                moveRight();
+                generate();
+            }
+
+            function keyUp() {
+                moveUp();
+                combineColumn();
+                moveUp();
+                generate();
+            }
+
+            function keyDown() {
+                moveDown();
+                combineColumn();
+                moveDown();
+                generate();
+            }
+
+            function checkForWin() {
+                for (let i = 0; i < squares.length; i++) {
+                    if (squares[i].innerHTML == 2048) {
+                        resultDisplay.innerHTML = `You WIN! 用时: ${seconds}秒`;
+                        document.removeEventListener("keydown", control);
+                        clearInterval(timerInterval);
+                    }
+                }
+            }
+
+            function checkForGameOver() {
+                let zeros = 0;
+                for (let i = 0; i < squares.length; i++) {
+                    if (squares[i].innerHTML == 0) {
+                        zeros++;
+                    }
+                }
+                if (zeros === 0) {
+                    resultDisplay.innerHTML = `You LOSE! 用时: ${seconds}秒`;
+                    document.removeEventListener("keydown", control);
+                    clearInterval(timerInterval);
+                }
+            }
+
+            function startTimer() {
+                timerInterval = setInterval(() => {
+                    seconds++;
+                    timerDisplay.textContent = `时间: ${seconds}秒`;
+                }, 1000);
+            }
+
+            function addColours() {
+                for (let i = 0; i < squares.length; i++) {
+                    if (squares[i].innerHTML == 0) squares[i].style.backgroundColor = "#afa192";
+                    else if (squares[i].innerHTML == 2) squares[i].style.backgroundColor = "#eee4da";
+                    else if (squares[i].innerHTML == 4) squares[i].style.backgroundColor = "#ede0c8";
+                    else if (squares[i].innerHTML == 8) squares[i].style.backgroundColor = "#f2b179";
+                    else if (squares[i].innerHTML == 16) squares[i].style.backgroundColor = "#ffcea4";
+                    else if (squares[i].innerHTML == 32) squares[i].style.backgroundColor = "#e8c064";
+                    else if (squares[i].innerHTML == 64) squares[i].style.backgroundColor = "#ffab6e";
+                    else if (squares[i].innerHTML == 128) squares[i].style.backgroundColor = "#fd9982";
+                    else if (squares[i].innerHTML == 256) squares[i].style.backgroundColor = "#ead79c";
+                    else if (squares[i].innerHTML == 512) squares[i].style.backgroundColor = "#76daff";
+                    else if (squares[i].innerHTML == 1024) squares[i].style.backgroundColor = "#beeaa5";
+                    else if (squares[i].innerHTML == 2048) squares[i].style.backgroundColor = "#d7d4f0";
+                }
+            }
+            addColours();
+
+            let myTimer = setInterval(addColours, 50);
+            createBoard();
+            startTimer();
+
+            restartButton.addEventListener("click", () => {
+                clearInterval(timerInterval);
+                gridDisplay.innerHTML = '';
+                squares = [];
+                seconds = 0;
+                timerDisplay.textContent = `时间: 0秒`;
+                resultDisplay.textContent = '';
+                createBoard();
+                startTimer();
+                document.addEventListener("keydown", control);
+            });
+        }
+
+        // Existing game logic...
+        let randomNumber = Math.floor(Math.random() * 100) + 1;
+        let attempts = 0;
+        let minRange = 1;
+        let maxRange = 100;
+
+        function checkGuess() {
+            const userGuess = Number(document.getElementById('guessInput').value);
+            attempts++;
+            const resultElement = document.getElementById('result');
+            const rangeElement = document.getElementById('range');
+            const attemptsElement = document.getElementById('attempts');
+            const restartButton = document.getElementById('restartButton');
+
+            if (userGuess === randomNumber) {
+                resultElement.textContent = `恭喜你！你用了${attempts}次就猜对了！`;
+                restartButton.style.display = 'inline';
+            } else if (userGuess < randomNumber) {
+                resultElement.textContent = '太低了，再试一次！';
+                minRange = Math.max(minRange, userGuess + 1);
+            } else {
+                resultElement.textContent = '太高了，再试一次！';
+                maxRange = Math.min(maxRange, userGuess - 1);
+            }
+
+            rangeElement.textContent = `当前范围：${minRange} - ${maxRange}`;
+            attemptsElement.textContent = `已使用的猜测次数：${attempts}`;
+        }
+
+        function restartGame() {
+            randomNumber = Math.floor(Math.random() * 100) + 1;
+            attempts = 0;
+            minRange = 1;
+            maxRange = 100;
+            document.getElementById('guessInput').value = '';
+            document.getElementById('result').textContent = '';
+            document.getElementById('range').textContent = '当前范围：1 - 100';
+            document.getElementById('attempts').textContent = '已使用的猜测次数：0';
+            document.getElementById('restartButton').style.display = 'none';
+        }
+
+        function resetGame() {
+            randomNumber = Math.floor(Math.random() * 100) + 1;
+            attempts = 0;
+            minRange = 1;
+            maxRange = 100;
+            document.getElementById('guessInput').value = '';
+            document.getElementById('result').textContent = '';
+            document.getElementById('range').textContent = '当前范围：1 - 100';
+            document.getElementById('attempts').textContent = '已使用的猜测次数：0';
+            document.getElementById('restartButton').style.display = 'none';
+        }
+
+        let lastHole;
+        let timeUp = false;
+        let score = 0;
+        let countdown;
+
+        function randomTime(min, max) {
+            return Math.round(Math.random() * (max - min) + min);
+        }
+
+        function randomHole(holes) {
+            const idx = Math.floor(Math.random() * holes.length);
+            const hole = holes[idx];
+            if (hole === lastHole) {
+                return randomHole(holes);
+            }
+            lastHole = hole;
+            return hole;
+        }
+
+        function peep() {
+            const time = randomTime(300, 1200);
+            const holes = document.querySelectorAll('.hole');
+            const hole = randomHole(holes);
+            const mole = hole.querySelector('.mole');
+            mole.classList.add('up');
+            setTimeout(() => {
+                mole.classList.remove('up');
+                if (!timeUp) peep();
+            }, time);
+        }
+
+        function startWhackAMole() {
+            score = 0;
+            document.getElementById('score').textContent = `得分: ${score}`;
+            document.getElementById('restartWhackButton').style.display = 'none';
+            timeUp = false;
+            peep();
+            countdown = 10;
+            document.getElementById('timer').textContent = `时间: ${countdown}秒`;
+            const timerInterval = setInterval(() => {
+                countdown--;
+                document.getElementById('timer').textContent = `时间: ${countdown}秒`;
+                if (countdown <= 0) {
+                    clearInterval(timerInterval);
+                    timeUp = true;
+                    document.getElementById('restartWhackButton').style.display = 'inline';
+                }
+            }, 1000);
+        }
+
+        function whack(hole) {
+            if (!hole.querySelector('.mole').classList.contains('up')) return;
+            score++;
+            document.getElementById('score').textContent = `得分: ${score}`;
+            hole.querySelector('.mole').classList.remove('up');
+            document.body.classList.add('shake');
+            setTimeout(() => document.body.classList.remove('shake'), 300);
+        }
+
+        // Create dynamic bubbles
+        function createBubbles() {
+            const bubbleCount = 30;
+            for (let i = 0; i < bubbleCount; i++) {
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                bubble.style.left = `${Math.random() * 100}vw`;
+                bubble.style.animationDelay = `${Math.random() * 5}s`;
+                bubble.style.width = bubble.style.height = `${(Math.random() * 20 + 10) * 3}px`;
+                bubble.addEventListener('click', splitBubble);
+                document.body.appendChild(bubble);
+            }
+        }
+
+        // Split bubble into smaller bubbles
+        function splitBubble(event) {
+            const bubble = event.target;
+            const bubbleRect = bubble.getBoundingClientRect();
+            const bubbleSize = parseInt(bubble.style.width);
+
+            bubble.remove();
+
+            for (let i = 0; i < 3; i++) {
+                const smallBubble = document.createElement('div');
+                smallBubble.className = 'bubble';
+                smallBubble.style.left = `${bubbleRect.left + Math.random() * bubbleSize}px`;
+                smallBubble.style.bottom = `${window.innerHeight - bubbleRect.top}px`;
+                smallBubble.style.width = smallBubble.style.height = `${bubbleSize / 2}px`;
+                smallBubble.style.animationDuration = `${Math.random() * 15 + 9}s`;
+                smallBubble.style.animationTimingFunction = 'linear';
+                smallBubble.addEventListener('click', splitBubble);
+                document.body.appendChild(smallBubble);
+            }
+        }
+
+        createBubbles();
+    </script>
+
+    <footer>
+        hnhz工作室出品
+    </footer>
+</body>
+</html>
